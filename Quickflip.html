@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Flip Tool</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #34a853;
+            --light-gray: #f5f5f5;
+            --dark-gray: #333;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            line-height: 1.6;
+            color: var(--dark-gray);
+            background-color: var(--light-gray);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .tool-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .tool-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark-gray);
+            text-align: center;
+        }
+        
+        .upload-section {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+        
+        .upload-section:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .upload-section.drag-over {
+            border-color: var(--secondary-color);
+            background-color: rgba(52, 168, 83, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-btn:hover {
+            background-color: #3367d6;
+        }
+        
+        .options-section {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .option-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.8rem;
+            color: var(--dark-gray);
+        }
+        
+        .radio-group {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .radio-option input {
+            cursor: pointer;
+        }
+        
+        .radio-option label {
+            cursor: pointer;
+        }
+        
+        .preview-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .image-container {
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+        }
+        
+        .image-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.8rem;
+            color: var(--dark-gray);
+        }
+        
+        .image-wrapper {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #fafafa;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-wrapper img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+        }
+        
+        .action-btns {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .flip-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .flip-btn:hover {
+            background-color: #3367d6;
+        }
+        
+        .download-btn {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .download-btn:hover {
+            background-color: #2d9249;
+        }
+        
+        .disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 0 auto;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            color: #ea4335;
+            text-align: center;
+            margin: 1rem 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <h2 class="tool-title">Image Flip Tool</h2>
+        
+        <div class="upload-section" id="dropArea">
+            <div class="upload-icon">📁</div>
+            <input type="file" id="fileInput" class="file-input" accept="image/*">
+            <button class="upload-btn" id="uploadBtn">Choose Image</button>
+            <p>or drag and drop your image here</p>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div class="options-section">
+            <h3 class="option-title">Flip Direction</h3>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="horizontalFlip" name="flipDirection" value="horizontal" checked>
+                    <label for="horizontalFlip">Horizontal</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="verticalFlip" name="flipDirection" value="vertical">
+                    <label for="verticalFlip">Vertical</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="bothFlip" name="flipDirection" value="both">
+                    <label for="bothFlip">Both</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="preview-section">
+            <div class="image-container">
+                <h3 class="image-title">Original Image</h3>
+                <div class="image-wrapper" id="originalImageContainer">
+                    <p>No image selected</p>
+                </div>
+            </div>
+            
+            <div class="image-container">
+                <h3 class="image-title">Flipped Image</h3>
+                <div class="image-wrapper" id="flippedImageContainer">
+                    <p>Flip will appear here</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="spinner" id="loadingSpinner"></div>
+        
+        <div class="action-btns">
+            <button class="action-btn flip-btn disabled" id="flipBtn" disabled>Flip Image</button>
+            <button class="action-btn download-btn disabled" id="downloadBtn" disabled>Download</button>
+        </div>
+    </div>
+    
+    <script>
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const dropArea = document.getElementById('dropArea');
+        const flipBtn = document.getElementById('flipBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const originalImageContainer = document.getElementById('originalImageContainer');
+        const flippedImageContainer = document.getElementById('flippedImageContainer');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Variables
+        let originalImage = null;
+        let currentImage = null; // Tracks the current image to flip
+        
+        // Event listeners
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        dropArea.addEventListener('dragover', handleDragOver);
+        dropArea.addEventListener('dragleave', handleDragLeave);
+        dropArea.addEventListener('drop', handleDrop);
+        flipBtn.addEventListener('click', flipImage);
+        downloadBtn.addEventListener('click', downloadImage);
+        
+        // Handle file selection
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processImageFile(file);
+            }
+        }
+        
+        // Handle drag over
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.add('drag-over');
+        }
+        
+        // Handle drag leave
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.remove('drag-over');
+        }
+        
+        // Handle drop
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.remove('drag-over');
+            
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                processImageFile(file);
+            }
+        }
+        
+        // Process image file
+        function processImageFile(file) {
+            // Check if file is an image
+            if (!file.type.match('image.*')) {
+                showError('Please select an image file (JPG, PNG, GIF, etc.)');
+                return;
+            }
+            
+            hideError();
+            showLoading();
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                originalImage = new Image();
+                originalImage.onload = function() {
+                    hideLoading();
+                    displayOriginalImage();
+                    enableButtons();
+                    // Set current image to original for first flip
+                    currentImage = originalImage;
+                };
+                originalImage.onerror = function() {
+                    hideLoading();
+                    showError('Error loading image. Please try another file.');
+                };
+                originalImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Display original image
+        function displayOriginalImage() {
+            originalImageContainer.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = originalImage.src;
+            img.alt = 'Original image';
+            originalImageContainer.appendChild(img);
+            
+            // Reset flipped image container
+            flippedImageContainer.innerHTML = '<p>Flip will appear here</p>';
+            downloadBtn.classList.add('disabled');
+            downloadBtn.disabled = true;
+        }
+        
+        // Flip image
+        function flipImage() {
+            if (!currentImage) return;
+            
+            showLoading();
+            
+            // Get selected flip direction
+            const flipDirection = document.querySelector('input[name="flipDirection"]:checked').value;
+            
+            // Use canvas to flip image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = currentImage.width;
+            canvas.height = currentImage.height;
+            
+            // Flip based on direction
+            if (flipDirection === 'horizontal') {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            } else if (flipDirection === 'vertical') {
+                ctx.translate(0, canvas.height);
+                ctx.scale(1, -1);
+            } else if (flipDirection === 'both') {
+                ctx.translate(canvas.width, canvas.height);
+                ctx.scale(-1, -1);
+            }
+            
+            // Draw the image
+            ctx.drawImage(currentImage, 0, 0);
+            
+            // Create flipped image
+            setTimeout(() => {
+                const flippedImg = new Image();
+                flippedImg.onload = function() {
+                    hideLoading();
+                    displayFlippedImage(flippedImg);
+                    // Set current image to the flipped version for next flip
+                    currentImage = flippedImg;
+                    downloadBtn.classList.remove('disabled');
+                    downloadBtn.disabled = false;
+                };
+                flippedImg.src = canvas.toDataURL('image/jpeg', 0.9);
+            }, 100);
+        }
+        
+        // Display flipped image
+        function displayFlippedImage(image) {
+            flippedImageContainer.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = image.src;
+            img.alt = 'Flipped image';
+            flippedImageContainer.appendChild(img);
+        }
+        
+        // Download image
+        function downloadImage() {
+            if (!currentImage || currentImage === originalImage) return;
+            
+            const a = document.createElement('a');
+            a.href = currentImage.src;
+            a.download = 'flipped-image.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        
+        // Enable action buttons
+        function enableButtons() {
+            flipBtn.classList.remove('disabled');
+            flipBtn.disabled = false;
+        }
+        
+        // Show loading spinner
+        function showLoading() {
+            loadingSpinner.style.display = 'block';
+        }
+        
+        // Hide loading spinner
+        function hideLoading() {
+            loadingSpinner.style.display = 'none';
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+        
+        // Hide error message
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
